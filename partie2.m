@@ -12,6 +12,8 @@ n_values = [10 20 40 80 160];
 errors_classic = zeros(size(n_values));
 errors_gauss   = zeros(size(n_values));
 
+% Question 5
+
 %Approche linéaire
 
 n = 40; % Nombre de points
@@ -109,6 +111,8 @@ xlabel('x');
 ylabel('u(x)');
 grid on;
 
+% Question 8 ----------
+
 figure(5);
 loglog(n_values, errors_classic, 'r-o', 'LineWidth', 2); hold on;
 loglog(n_values, errors_gauss, 'b-s', 'LineWidth', 2);
@@ -118,6 +122,9 @@ ylabel('Erreur max ||u - u_n||_\infty');
 title('Comparaison des méthodes linéaires');
 legend('Classique (integral)', 'Gauss-Legendre');
 
+%---------------
+
+% Question 5
 
 %Approche par interpolation global
 
@@ -172,6 +179,9 @@ title('Densité de charge équivalente u2(x)');
 xlabel('Position normalisée x2');
 ylabel('u2(x)');
 
+
+% Question 7
+
 %Erreur
 
 % Valeurs de n demandées par l'énoncé
@@ -196,6 +206,22 @@ for k = 1:length(n_values)
 end
 
 % --- Graphiques ---
+
+% --- Fonction de résolution (Interpolation linéaire) ---
+function [u, x] = solve_condensateur(n, K_func)
+    x = linspace(0, 1, n+1);
+    h = 1/n;
+    A = zeros(n+1, n+1);
+    for i = 1:n+1
+        for j = 1:n+1
+            phi_j = @(y) max(0, 1 - abs(y - x(j))/h);
+            y_min = max(0, x(j) - h);
+            y_max = min(1, x(j) + h);
+            A(i,j) = integral(@(y) K_func(x(i), y) .* phi_j(y), y_min, y_max);
+        end
+    end
+    u = (eye(n+1) - A) \ ones(n+1, 1);
+end
 
 % Graphique Erreur vs n 
 
@@ -224,22 +250,5 @@ legend('Erreur', 'Référence h^2');
 % --- Ajout : calcul de l'ordre ---
 p = polyfit(log(h_values), log(errors), 1);
 disp(['Ordre de convergence estimé : p = ', num2str(p(1))]);
-
-
-% --- Fonction de résolution (Interpolation linéaire) ---
-function [u, x] = solve_condensateur(n, K_func)
-    x = linspace(0, 1, n+1);
-    h = 1/n;
-    A = zeros(n+1, n+1);
-    for i = 1:n+1
-        for j = 1:n+1
-            phi_j = @(y) max(0, 1 - abs(y - x(j))/h);
-            y_min = max(0, x(j) - h);
-            y_max = min(1, x(j) + h);
-            A(i,j) = integral(@(y) K_func(x(i), y) .* phi_j(y), y_min, y_max);
-        end
-    end
-    u = (eye(n+1) - A) \ ones(n+1, 1);
-end
 
 
