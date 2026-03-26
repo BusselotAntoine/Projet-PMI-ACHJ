@@ -254,15 +254,17 @@ disp(['Ordre de convergence estimé : p = ', num2str(p(1))]);
 % Q9
 epsilon0 = 8.854e-12; 
 R_val = 0.01;        
+D_val = 0.01;
+epsilon =  R_val/D_val;
 integral_u = trapz(x_ref, u_ref); 
 
-C_numerique = 4 * epsilon0 * R_val * integral_u;
+C_numerique = 4 * epsilon * R_val * integral_u;
 
 fprintf('Intégrale de u(x) : %.4f\n', integral_u);
 fprintf('Capacité calculée (Love) : %.4e F\n', C_numerique);
 
 % Q10
-D_val = 0.01;        
+     
 S = pi * R_val^2;     
 
 C_classique = (epsilon0 * S) / D_val;
@@ -270,5 +272,6 @@ C_classique = (epsilon0 * S) / D_val;
 fprintf('Capacité classique (S/D) : %.4e F\n', C_classique);
 ecart_relatif = abs(C_numerique - C_classique) / C_numerique * 100;
 fprintf('Écart relatif : %.2f %%\n', ecart_relatif);
+
 
 
