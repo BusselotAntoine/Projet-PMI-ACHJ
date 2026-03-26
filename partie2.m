@@ -255,7 +255,7 @@ disp(['Ordre de convergence estimé : p = ', num2str(p(1))]);
 epsilon0 = 8.854e-12; 
 R_val = 0.01;        
 D_val = 0.01;
-epsilon =  R_val/D_val;
+epsilon =  D_val/R_val;
 integral_u = trapz(x_ref, u_ref); 
 
 C_numerique = 4 * epsilon * R_val * integral_u;
