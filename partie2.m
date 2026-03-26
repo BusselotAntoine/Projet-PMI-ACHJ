@@ -255,10 +255,14 @@ disp(['Ordre de convergence estimé : p = ', num2str(p(1))]);
 epsilon0 = 8.854e-12; 
 R_val = 0.01;        
 D_val = 0.01;
-epsilon =  D_val/R_val;
-integral_u = trapz(x_ref, u_ref); 
+epsilon1 =  D_val/R_val;
 
-C_numerique = 4 * epsilon * R_val * integral_u;
+K1 = @(x,y)(1/pi) * (1./(epsilon1^2 + (x-y).^2) + 1./(epsilon1^2 + (x+y).^2));
+[x_ref, u_ref] = solve_linear_gauss(n_ref, K1, a, b)
+[x_c, u_c] = solve_linear_classic(n, K1, a, b);
+integral_u = interp1(x_ref, u_ref, x_c);
+
+C_numerique = 4 * epsilon1 * R_val * integral_u;
 
 fprintf('Intégrale de u(x) : %.4f\n', integral_u);
 fprintf('Capacité calculée (Love) : %.4e F\n', C_numerique);
@@ -273,5 +277,35 @@ fprintf('Capacité classique (S/D) : %.4e F\n', C_classique);
 ecart_relatif = abs(C_numerique - C_classique) / C_numerique * 100;
 fprintf('Écart relatif : %.2f %%\n', ecart_relatif);
 
+D_values = [0.01, 0.001]; 
 
+fprintf('Q11\n');
+
+for D = D_values
+    epsilon = D/R_val;
+
+    K_new = @(x,y)(1/pi) * (1./(epsilon^2 + (x-y).^2) + 1./(epsilon^2 + (x+y).^2));
+    
+    % Résolution (utiliser la fonction solve_linear_gauss de votre code)
+    n_pts = 100;
+    [x_u, u_sol] = solve_linear_gauss(n_pts, K_new, 0, 1);
+    
+    % Calculs des capacités
+    C_Love = 4 * epsilon0 * R * trapz(x_u, u_sol);
+    C_class = (epsilon0 * S) / D;
+    
+    % Affichage
+    fprintf('\nPour D = %.3f m (epsilon = %.1f) :\n', D, epsilon);
+    fprintf('  Capacité (numérique) : %.4e F\n', C_Love);
+    fprintf('  Capacité (classique) : %.4e F\n', C_class);
+    fprintf('  Écart relatif        : %.2f %%\n', abs(C_Love - C_class)/C_Love * 100);
+    
+    % Tracer u(x) pour comparer les profils
+    figure(6); hold on;
+    plot(x_u, u_sol, 'DisplayName', ['D = ' num2str(D*1000) ' mm']);
+end
+
+title('Influence de la distance sur la densité de charge u(x)');
+xlabel('x (normalisé)'); ylabel('u(x)');
+legend; grid on; 
 
