@@ -3,16 +3,18 @@ R = 0.01; % 1 cm
 D = 0.01; % 1 cm 
 epsilon = D/R; 
 
-a = 0;
-b = 1;
 
+a = 0; % Borne inferieur
+b = 1;  % Borne superieur
+
+% Noyau dependant de la geometrie
 K = @(x,y)(1/pi) * (1./(epsilon^2 + (x-y).^2) + 1./(epsilon^2 + (x+y).^2));
 
+% Ensemble des valeurs n a tester
 n_values = [10 20 40 80 160];
+% Listes de erreurs pour les deux tests
 errors_classic = zeros(size(n_values));
 errors_gauss   = zeros(size(n_values));
-
-% Question 5
 
 %Approche linéaire
 
@@ -111,18 +113,7 @@ xlabel('x');
 ylabel('u(x)');
 grid on;
 
-% Question 8 ----------
 
-figure(5);
-loglog(n_values, errors_classic, 'r-o', 'LineWidth', 2); hold on;
-loglog(n_values, errors_gauss, 'b-s', 'LineWidth', 2);
-grid on;
-xlabel('n');
-ylabel('Erreur max ||u - u_n||_\infty');
-title('Comparaison des méthodes linéaires');
-legend('Classique (integral)', 'Gauss-Legendre');
-
-%---------------
 
 % Question 5
 
@@ -251,7 +242,20 @@ legend('Erreur', 'Référence h^2');
 p = polyfit(log(h_values), log(errors), 1);
 disp(['Ordre de convergence estimé : p = ', num2str(p(1))]);
 
-% --- Paramètres ---
+% Question 8 ----------
+
+figure(5);
+loglog(n_values, errors_classic, 'r-o', 'LineWidth', 2); hold on;
+loglog(n_values, errors_gauss, 'b-s', 'LineWidth', 2);
+grid on;
+xlabel('n');
+ylabel('Erreur max ||u - u_n||_\infty');
+title('Comparaison des méthodes linéaires');
+legend('Classique (integral)', 'Gauss-Legendre');
+
+%---------------
+
+% Question 9 ----------
 epsilon0 = 8.854e-12; 
 R_val = 0.01;         
 D_val = 0.01;         
