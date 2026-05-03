@@ -1,3 +1,5 @@
+
+clear; close all; clc;
 %% --- PARAMÈTRES PHYSIQUES ET GÉOMÉTRIQUES ---
 R = 0.01;       % Rayon du disque (1 cm)
 D = 0.01;       % Distance entre les disques (1 cm)
@@ -31,9 +33,9 @@ errors_gauss   = zeros(size(n_values)); % Stockage erreurs (méthode quadrature 
 %   u   : (Vecteur) Solution (densité de charge) aux points x.
 % =========================================================================
 function [x, u] = solve_linear_classic(n, K, a, b)
-    h = (b - a)/n;
     x = linspace(a, b, n+1);
-    A = zeros(n+1);
+    h = (b-a)/n;
+    A = zeros(n+1, n+1);
 
     for i = 1:n+1
         for j = 1:n+1
@@ -42,11 +44,11 @@ function [x, u] = solve_linear_classic(n, K, a, b)
             y_min = max(a, x(j) - h);
             y_max = min(b, x(j) + h);
             % Calcul de l'élément de matrice par intégration adaptive
-            A(i,j) = integral(@(y) K(x(i), y).*phi_j(y), y_min, y_max);
+            A(i,j) = integral(@(y) K(x(i), y) .* phi_j(y), y_min, y_max);
         end
     end
     % Résolution du système linéaire (I - A)u = 1
-    u = (eye(n+1) - A) \ ones(n+1,1);
+    u = (eye(n+1) - A) \ ones(n+1, 1);
 end
 
 % =========================================================================
@@ -131,15 +133,15 @@ for k = 1:length(n_values)
 end
 
 % --- Fonction de résolution (Interpolation linéaire) ---
-function [u, x] = solve_condensateur(n, K_func)
-    x = linspace(0, 1, n+1);
-    h = 1/n;
+function [u, x] = solve_condensateur(n, K_func,a,b)
+    x = linspace(a, b, n+1);
+    h = (b-a)/n;
     A = zeros(n+1, n+1);
     for i = 1:n+1
         for j = 1:n+1
             phi_j = @(y) max(0, 1 - abs(y - x(j))/h);
-            y_min = max(0, x(j) - h);
-            y_max = min(1, x(j) + h);
+            y_min = max(a, x(j) - h);
+            y_max = min(b, x(j) + h);
             A(i,j) = integral(@(y) K_func(x(i), y) .* phi_j(y), y_min, y_max);
         end
     end
@@ -153,12 +155,12 @@ h_values = 1 ./ n_values;
 
 % Calcule de la solution de référence
 n_ref = 200; %Beaucoup de points pour la référence
-[u_ref, x_ref] = solve_condensateur(n_ref, K);
+[u_ref, x_ref] = solve_condensateur(n_ref, K,a,b);
 
 % --- calcul de l'erreur ---
 for k = 1:length(n_values)
     n = n_values(k);
-    [u_n, x_n] = solve_condensateur(n, K);
+    [u_n, x_n] = solve_condensateur(n, K,a,b);
 
     % Interpolation de u_ref sur la grille plus grossière x_n pour comparer
     u_ref_interp = interp1(x_ref, u_ref, x_n);
@@ -252,7 +254,7 @@ grid on;
 
 figure(3);
 plot(x2, u2);
-title('Densité de charge équivalente u2(x)');
+title('Densité de charge avec polynôme de Lagrange globaux');
 xlabel('Position normalisée x2');
 ylabel('u2(x)');
 
@@ -345,29 +347,8 @@ fprintf('\n');
 
 % Q11
 fprintf('Q11\n');
-fprintf('Regarder figure 6\n');
-
-
-
-for D = D_values_tot
-    epsilon = D/R_val;
-    K_new = @(x,y)(1/pi) * (1./(epsilon^2 + (x-y).^2) + 1./(epsilon^2 + (x+y).^2));
-    
-    n_pts = 100;
-    [x_u, u_sol] = solve_linear_gauss(n_pts, K_new, 0, 1);
-    
-    % Calculs des capacités
-    C_Love = 4 * epsilon0 * R * trapz(x_u, u_sol);
-    C_class = (epsilon0 * S) / D;
-
-    figure(6); hold on;
-    plot(x_u, u_sol, 'DisplayName', ['D = ' num2str(D*1000) ' mm']);
-end
-
-
-title('Influence de la distance sur la densité de charge u(x) pour la resolution gaussienne');
-xlabel('x (normalisé)'); ylabel('u(x)');
-legend; grid on; 
+fprintf('Regarder figure 7 , 9 & 10\n');
+ 
 
 for D = D_values_eff
     epsilon = D/R_val;
@@ -389,26 +370,6 @@ title('Influence de la distance sur la densité de charge u(x) pour la resolutio
 xlabel('x (normalisé)'); ylabel('u(x)');
 legend; grid on; 
 
-for D = D_values_tot
-    epsilon = D/R_val;
-    K_new = @(x,y)(1/pi) * (1./(epsilon^2 + (x-y).^2) + 1./(epsilon^2 + (x+y).^2));
-    
-    n_pts = 100;
-    [x_u, u_sol] = solve_linear_classic(n_pts, K_new, 0, 1);
-    
-    % Calculs des capacités
-    C_Love = 4 * epsilon0 * R * trapz(x_u, u_sol);
-    C_class = (epsilon0 * S) / D;
-    
-
-    % Tracer u(x) pour comparer les profils
-    figure(8); hold on;
-    plot(x_u, u_sol, 'DisplayName', ['D = ' num2str(D*1000) ' mm']);
-end
-
-title('Influence de la distance sur la densité de charge u(x) pour la resolution lineaire');
-xlabel('x (normalisé)'); ylabel('u(x)');
-legend; grid on; 
 
 
 for D = D_values_eff
@@ -429,6 +390,32 @@ for D = D_values_eff
 end
 
 title('Influence de la distance sur la densité de charge u(x) pour la resolution lineaire');
+xlabel('x (normalisé)'); ylabel('u(x)');
+legend; grid on; 
+
+for D = D_values_eff
+    epsilon = D/R_val;
+    K_new = @(x,y)(1/pi) * (1./(epsilon^2 + (x-y).^2) + 1./(epsilon^2 + (x+y).^2));
+    
+    n3 = 30; % Nombre de points
+    x3 = linspace(a, b, n3); % Points
+    A3 = build_A_matrix(x3,K_new,a,b,n3);
+    I3 = eye(n3);
+    d3 = ones(n3, 1); % Terme source d(x) = 1
+
+    u_new = (I3 - A3) \ d3;
+    
+    % Calculs des capacités
+    C_Love = 4 * epsilon0 * R * trapz(x3, u_new);
+    C_class = (epsilon0 * S) / D;
+    
+
+    % Tracer u(x) pour comparer les profils
+    figure(10); hold on;
+    plot(x3, u_new, 'DisplayName', ['D = ' num2str(D*1000) ' mm']);
+end
+
+title('Influence de la distance sur la densité de charge u(x) pour la resolution avec polynôme de Lagrange globaux');
 xlabel('x (normalisé)'); ylabel('u(x)');
 legend; grid on; 
 
